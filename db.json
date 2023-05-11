@@ -1,0 +1,28 @@
+{
+  "events": [
+    {
+      "id": 1,
+      "title": "Go to bath",
+      "description": "Gooo",
+      "date": 1683714932
+    },
+    {
+      "id": 2,
+      "title": "Go to bad",
+      "description": "Gooo",
+      "date": 1686652532
+    },
+    {
+      "id": 3,
+      "title": "Go to bad",
+      "description": "Gooo",
+      "date": 1681382132
+    },
+    {
+      "id": 4,
+      "title": "Go to bad",
+      "description": "Gooo",
+      "date": 1683974132
+    }
+  ]
+}
