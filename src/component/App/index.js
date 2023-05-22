@@ -5,14 +5,22 @@ import {Header} from "../Header";
 import Monitor from "../Monitor";
 import CalendarGrid from "../CalendarGrid";
 import styled from "styled-components";
+import {DISPLAY_MODE_DAY, DISPLAY_MODE_MONTH} from "../../helpers/constants";
+import {DayShowComponent} from "../DayShowComponent";
+import {ButtonsWrapper, ButtonWrapper, EventBody, EventTitle} from "../../containers/StyledComponents";
 const ShadowWrapper = styled.div`
+  min-width:900px;
+  height: 650px;
   border-radius:8px;
   overflow:hidden;
   border-top:1px solid #737374;
   border-bottom:2px solid #464648;
   bottom-left:1px solid #464648;
   bottom-right:1px #464648;
+  border-radius: 8px;
   box-shadow: 0 0 0 1px #1A1A1A, 0 8px 20px 6px #888 ;
+  display: flex;
+  flex-direction: column; 
 `
 const FormPositionWrapper = styled.div`
   position:absolute;
@@ -28,37 +36,13 @@ const FormPositionWrapper = styled.div`
 `
 const FormWrapper = styled(ShadowWrapper)`
   width:320px;
+  min-width: 320px;
+  height: 132px;
   background-color:#1E1F21;
   color:#DDDDDD;
   box-shadow: unset;
 `
-const EventTitle = styled.input`
-  padding:8px 14px;
-  font-size:.85rem;
-  width:100%;
-  border:unset;
-  background-color: #1E1F21;
-  color:#DDDDDD;
-  outline: unset;
-  border-bottom: 1px solid #464648;
-`
-const EventBody = styled.textarea`
-  padding:8px 14px;
-  font-size:.85rem;
-  width:100%;
-  border:unset;
-  background-color: #1E1F21;
-  color:#DDDDDD;
-  outline: unset;
-  border-bottom: 1px solid #464648;
-  resize: none;
-  height: 60px;
-`
-const ButtonsWrapper = styled.div`
-  padding:8px 14px;
-  display:flex;
-  justify-content: flex-end;
-`
+
 const url='http://localhost:5000'
 
 const defaultEvent = {
@@ -67,6 +51,8 @@ const defaultEvent = {
     date:moment().format('X')
 }
 function App() {
+    const [displayMode,setDisplayMode]=useState(DISPLAY_MODE_MONTH);
+    const totalDays = 42;
     moment.updateLocale({week:{dow:1}});
     const [method,setMethod]=useState(null)
     const [today,setToday]=useState(moment());
@@ -74,9 +60,9 @@ function App() {
     const [events,setEvents]=useState([])
     const [event,setEvent]=useState(null)
     const [isShowForm,setShowForm]=useState(false)
-    const prevHandler = ()=>setToday(prev=>prev.clone().subtract(1,'month'));
+    const prevHandler = ()=>setToday(prev=>prev.clone().subtract(1,displayMode));
     const todayHandler = ()=>setToday(moment())
-    const nextHandler = ()=>setToday(prev=>prev.clone().add(1,'month'))
+    const nextHandler = ()=>setToday(prev=>prev.clone().add(1,displayMode))
     const startDayQuery = startDay.clone().format('X')
     const endDayQuery = startDay.clone().add(42,'days').format('X')
     useEffect(()=>{
@@ -86,12 +72,15 @@ function App() {
                 console.log(res)
                 setEvents(res)
             })
-    },[today])
+    },[today]);
 
     const openFormHandler = (methodName ,eventFormUpdate,dayItem)=>{
-        setShowForm(true)
         setEvent(eventFormUpdate || {...defaultEvent,date:dayItem.format('X')})
         setMethod(methodName)
+    }
+    const openModalFormHandler = (methodName ,eventFormUpdate,dayItem)=>{
+        setShowForm(true)
+        openFormHandler(methodName,eventFormUpdate,dayItem)
     }
     const cancelButtonHandler = ()=>{
         setShowForm(false)
@@ -159,10 +148,10 @@ function App() {
                                 placeholder='Description'
                             />
                             <ButtonsWrapper>
-                                <button onClick={cancelButtonHandler}>Cancel</button>
-                                <button onClick={eventFetchHandler}>{method}</button>
+                                <ButtonWrapper onClick={cancelButtonHandler}>Cancel</ButtonWrapper>
+                                <ButtonWrapper onClick={eventFetchHandler}>{method}</ButtonWrapper>
                                 {
-                                    method === 'Update' ? <button onClick={removeButtonHandler}>Remove</button> : null
+                                    method === 'Update' ? <ButtonWrapper danger onClick={removeButtonHandler}>Remove</ButtonWrapper> : null
                                 }
                             </ButtonsWrapper>
                         </FormWrapper>
@@ -176,8 +165,30 @@ function App() {
                     prevHandler={prevHandler}
                     todayHandler={todayHandler}
                     nextHandler={nextHandler}
+                    setDisplayMode={setDisplayMode}
+                    displayMode={displayMode}
                 />
-                <CalendarGrid startDay={startDay} today={today} events={events} openFormHandler={openFormHandler}/>
+                {
+                    displayMode === DISPLAY_MODE_MONTH ? (
+                        <CalendarGrid startDay={startDay} today={today} totalDays={totalDays} events={events} openFormHandler={openModalFormHandler} setDisplayMode={setDisplayMode}/>
+                    ) : null
+                }
+                {
+                    displayMode === DISPLAY_MODE_DAY ? (
+                        <DayShowComponent
+                            events={events}
+                            today={today}
+                            selectedEvent={event}
+                            setEvent={setEvent}
+                            changeEventHandler={changeEventHandler}
+                            cancelButtonHandle={cancelButtonHandler}
+                            eventFetchHandler={eventFetchHandler}
+                            removeButtonHandler={removeButtonHandler}
+                            method={method}
+                            openFormHandler={openFormHandler}
+                        />
+                    ) : null
+                }
             </ShadowWrapper>
         </>
     );
